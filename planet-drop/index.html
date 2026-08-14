@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#090b1a" />
+  <title>PLANET DROP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">GRAVITY MERGE PUZZLE</div>
+        <h1>PLANET DROP</h1>
+      </div>
+      <div class="scoreBox">
+        <span>SCORE</span>
+        <strong id="score">0</strong>
+      </div>
+    </header>
+
+    <section class="hud">
+      <div class="nextCard">
+        <span>NEXT</span>
+        <div id="nextPreview" class="preview"></div>
+      </div>
+      <div class="mission">
+        <span>MISSION</span>
+        <strong id="missionText">衛星をつくろう</strong>
+      </div>
+      <button id="restartBtn" class="restart" type="button">↻</button>
+    </section>
+
+    <section class="gameWrap" aria-label="PLANET DROP game area">
+      <canvas id="game" width="720" height="980"></canvas>
+      <div id="message" class="message hidden">
+        <div class="messageCard">
+          <div class="small">SPACE OVERFLOW</div>
+          <h2>GAME OVER</h2>
+          <p>最終スコア <strong id="finalScore">0</strong></p>
+          <button id="againBtn" type="button">もう一度</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="guide">
+      <span>① 左右に動かす</span>
+      <span>② タップで落とす</span>
+      <span>③ 同じ星を合体</span>
+    </div>
+
+    <section class="evolution">
+      <div class="evoTitle">STAR EVOLUTION</div>
+      <div id="evoRow" class="evoRow"></div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
