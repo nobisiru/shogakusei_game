@@ -3,82 +3,36 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#102a23" />
-  <title>LOST CIVILIZATION - Mini Demo</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#0a1020" />
+  <title>NOBISIRU GAME LAB</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#243a67 0,#0b1020 46%,#05070d 100%);color:#fff;font-family:ui-rounded,"Hiragino Maru Gothic ProN","Yu Gothic",system-ui,sans-serif}.wrap{max-width:1050px;margin:auto;padding:30px 16px 50px}.eyebrow{color:#80d9ff;font-weight:900;letter-spacing:.18em;font-size:.75rem;margin:0}.hero h1{font-size:clamp(2rem,8vw,4.5rem);margin:.25rem 0 .4rem;line-height:.95}.hero p:last-child{color:#c7d2ea;font-weight:700;max-width:650px}.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:30px}.card{position:relative;overflow:hidden;min-height:340px;border-radius:26px;text-decoration:none;color:#fff;padding:24px;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid rgba(255,255,255,.16);box-shadow:0 20px 50px rgba(0,0,0,.35);transition:.2s}.card:hover{transform:translateY(-4px)}.card:active{transform:scale(.98)}.card::before{content:"";position:absolute;inset:0;z-index:0}.card>*{position:relative;z-index:1}.civil::before{background:radial-gradient(circle at 70% 20%,rgba(255,205,70,.5),transparent 25%),linear-gradient(145deg,#24543e,#0b1a16 70%)}.planet::before{background:radial-gradient(circle at 68% 22%,#ff9d4d 0 7%,transparent 8%),radial-gradient(circle at 42% 34%,#7ad8ff 0 11%,transparent 12%),radial-gradient(circle at 82% 48%,#b28cff 0 16%,transparent 17%),linear-gradient(145deg,#1c245e,#080a1b 70%)}.icon{font-size:5rem;margin-bottom:auto;filter:drop-shadow(0 10px 12px rgba(0,0,0,.3))}.tag{display:inline-block;width:max-content;padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.3);font-size:.72rem;font-weight:900;letter-spacing:.08em}.card h2{font-size:clamp(1.6rem,5vw,2.5rem);margin:.55rem 0 .25rem}.card p{margin:.2rem 0;color:#e0e8f5;font-weight:700;line-height:1.6}.play{margin-top:15px;display:inline-flex;align-items:center;gap:8px;font-weight:1000}.footer{text-align:center;color:#8492ad;margin-top:32px;font-size:.85rem}@media(max-width:700px){.wrap{padding-top:22px}.games{grid-template-columns:1fr}.card{min-height:280px}.icon{font-size:4rem}}
+  </style>
 </head>
 <body>
-  <main class="app">
+  <main class="wrap">
     <header class="hero">
-      <div>
-        <p class="eyebrow">BROWSER PROTOTYPE</p>
-        <h1>LOST CIVILIZATION</h1>
-        <p class="subtitle">ゼロから文明をつくれ ― Mini Demo</p>
-      </div>
-      <div class="level"><span>文明LEVEL</span><strong id="level">0</strong></div>
+      <p class="eyebrow">NOBISIRU GAME LAB</p>
+      <h1>GAME<br>SELECT</h1>
+      <p>気になるゲームを選んで、すぐにブラウザでプレイ。これから新しいゲームをここに追加していきます。</p>
     </header>
-
-    <section class="status-panel" aria-label="ゲーム状況">
-      <div class="mission">
-        <span class="label">MISSION</span>
-        <strong id="missionText">まずは木と石を集めよう</strong>
-      </div>
-      <div class="inventory" id="inventory"></div>
+    <section class="games" aria-label="ゲーム一覧">
+      <a class="card civil" href="lost-civilization/">
+        <div class="icon">🔥🧭</div>
+        <span class="tag">SCIENCE × SURVIVAL</span>
+        <h2>LOST CIVILIZATION</h2>
+        <p>木と石から始めて、火・炉・ガラスを発明。ゼロから文明をつくろう。</p>
+        <span class="play">PLAY NOW →</span>
+      </a>
+      <a class="card planet" href="planet-drop/">
+        <div class="icon">🪐✨</div>
+        <span class="tag">PHYSICS × PUZZLE</span>
+        <h2>PLANET DROP</h2>
+        <p>同じ天体をぶつけて進化。小さな宇宙からブラックホールを目指せ。</p>
+        <span class="play">PLAY NOW →</span>
+      </a>
     </section>
-
-    <section class="game-shell">
-      <div class="map-wrap">
-        <div id="map" class="map" role="application" aria-label="探索マップ"></div>
-        <div id="toast" class="toast" aria-live="polite"></div>
-      </div>
-
-      <aside class="side-panel">
-        <section class="craft-card">
-          <div class="card-title"><span>🔧</span><strong>CRAFT</strong></div>
-          <button class="craft" data-craft="fire">
-            <span class="craft-icon">🔥</span>
-            <span><b>たき火</b><small>木×2 / 石×1</small></span>
-          </button>
-          <button class="craft" data-craft="furnace" disabled>
-            <span class="craft-icon">🧱</span>
-            <span><b>簡易炉</b><small>石×2 / 木×1</small></span>
-          </button>
-          <button class="craft" data-craft="glass" disabled>
-            <span class="craft-icon">🪟</span>
-            <span><b>ガラス</b><small>砂×2 / 木×1</small></span>
-          </button>
-        </section>
-
-        <section class="log-card">
-          <div class="card-title"><span>📓</span><strong>DISCOVERY LOG</strong></div>
-          <ol id="log"></ol>
-        </section>
-      </aside>
-    </section>
-
-    <section class="controls" aria-label="移動操作">
-      <p><b>移動：</b> 画面の矢印 / キーボードの矢印・WASD</p>
-      <div class="dpad">
-        <button data-move="up" aria-label="上へ">▲</button>
-        <button data-move="left" aria-label="左へ">◀</button>
-        <button data-move="down" aria-label="下へ">▼</button>
-        <button data-move="right" aria-label="右へ">▶</button>
-      </div>
-      <button id="reset" class="reset">最初から</button>
-    </section>
+    <p class="footer">Browser Game Prototype Collection</p>
   </main>
-
-  <dialog id="clearDialog">
-    <div class="clear-box">
-      <p class="eyebrow">DEMO CLEAR</p>
-      <div class="clear-icon">✨🪟✨</div>
-      <h2>文明LEVEL 1 達成！</h2>
-      <p>火を起こし、炉をつくり、砂からガラスを生み出した。</p>
-      <p class="next">次の文明では「銅」「電気」「通信」へ。</p>
-      <button id="playAgain">もう一度遊ぶ</button>
-    </div>
-  </dialog>
-
-  <script src="game.js"></script>
 </body>
 </html>
