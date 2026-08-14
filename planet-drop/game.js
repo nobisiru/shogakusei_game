@@ -52,6 +52,11 @@ function dropBall(){
   canDrop=false;nextLevel=randNext();updateNext();
   setTimeout(()=>{canDrop=true},360);
 }
+function isOverlapping(a,b,slack=1){
+  const dx=b.x-a.x,dy=b.y-a.y;
+  const min=a.r+b.r;
+  return dx*dx+dy*dy <= min*min*slack*slack;
+}
 function circleCollision(a,b){
   const dx=b.x-a.x,dy=b.y-a.y;
   const d2=dx*dx+dy*dy;
@@ -74,8 +79,7 @@ function merge(a,b){
   if(a.level!==b.level||a.level>=levels.length-1)return false;
   const key=[a.id,b.id].sort().join(':');
   if(mergeLock.has(key))return false;
-  const dx=b.x-a.x,dy=b.y-a.y;
-  if(dx*dx+dy*dy>(a.r+b.r)*(a.r+b.r)*.86)return false;
+  if(!isOverlapping(a,b,1.06))return false;
   mergeLock.add(key);
   const nl=a.level+1,lv=levels[nl];
   const merged={id:crypto.randomUUID?.()||Math.random().toString(36),x:(a.x+b.x)/2,y:(a.y+b.y)/2,vx:(a.vx+b.vx)/2,vy:Math.min((a.vy+b.vy)/2,-1.5),r:lv.r,level:nl,age:0,pulse:1};
@@ -95,13 +99,24 @@ function simulate(dt){
     if(b.pulse)b.pulse=Math.max(0,b.pulse-.045*step);
   });
 
-  for(let pass=0;pass<3;pass++){
+  // 同じ種類は、反発処理より先に合体判定する。
+  // 以前は衝突で球を押し戻した後に合体判定していたため、接触しても距離条件を満たさず合体しなかった。
+  for(let pass=0;pass<4;pass++){
     let merged=false;
-    outer:for(let i=0;i<balls.length;i++)for(let j=i+1;j<balls.length;j++){
-      const a=balls[i],b=balls[j];
-      if(circleCollision(a,b)&&a.level===b.level&&a.age>120&&b.age>120){if(merge(a,b)){merged=true;break outer}}
+    outer:for(let i=0;i<balls.length;i++){
+      for(let j=i+1;j<balls.length;j++){
+        const a=balls[i],b=balls[j];
+        if(a.level===b.level&&a.age>80&&b.age>80&&isOverlapping(a,b,1.02)){
+          if(merge(a,b)){merged=true;break outer;}
+        }
+      }
     }
     if(!merged)break;
+  }
+
+  // 合体しなかった球だけ通常の物理衝突を処理する。
+  for(let i=0;i<balls.length;i++){
+    for(let j=i+1;j<balls.length;j++) circleCollision(balls[i],balls[j]);
   }
 
   const dangerous=balls.some(b=>b.age>1200&&b.y-b.r<DANGER&&Math.abs(b.vy)<1.4);
