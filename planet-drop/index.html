@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090b1a" />
   <title>PLANET DROP</title>
-  <link rel="stylesheet" href="styles.css?v=20260815-0945" />
+  <link rel="stylesheet" href="styles.css?v=20260815-1015" />
 </head>
 <body>
   <main class="app">
@@ -18,7 +18,7 @@
     </header>
     <section class="hud">
       <div class="nextCard"><span>NEXT</span><div id="nextPreview" class="preview"></div></div>
-      <div class="mission"><span>MISSION</span><strong id="missionText">ブラックホールを作って宇宙崩壊を遅らせろ！</strong></div>
+      <div class="mission"><span>MISSION</span><strong id="missionText">ブラックホールを作って時間を稼げ！</strong></div>
       <button id="restartBtn" class="restart" type="button">↻</button>
     </section>
     <section class="gameWrap" aria-label="PLANET DROP game area">
@@ -27,7 +27,7 @@
         <div class="messageCard">
           <div class="small">SPACE COLLAPSE</div>
           <h2>GAME OVER</h2>
-          <p>宇宙空間が限界を迎えました。</p>
+          <p>背景ブラックホールが臨界巨大化しました。</p>
           <p>最終スコア <strong id="finalScore">0</strong></p>
           <button id="againBtn" type="button">もう一度</button>
         </div>
@@ -37,11 +37,12 @@
       <span>① 左右に照準を動かす</span>
       <span>② タップで天体を射出</span>
       <span>③ 同じ天体を合体してブラックホールを作る</span>
-      <span>④ LIMIT越え、または背景ブラックホール臨界でGAME OVER</span>
-      <span>⑤ 背景ブラックホールは65秒で臨界。残り10秒から赤く点滅</span>
+      <span>④ ゲームオーバーは背景ブラックホールの臨界のみ</span>
+      <span>⑤ 最初は約65秒。1分を超えるごとに背景ブラックホールの成長が加速</span>
+      <span>⑥ 自分のブラックホールをぶつけると背景ブラックホールが小さくなる</span>
     </div>
     <section class="evolution"><div class="evoTitle">STAR EVOLUTION</div><div id="evoRow" class="evoRow"></div></section>
   </main>
-  <script src="game.js?v=20260815-0945"></script>
+  <script src="game.js?v=20260815-1015"></script>
 </body>
 </html>
