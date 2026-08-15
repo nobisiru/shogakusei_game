@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090b1a" />
   <title>PLANET DROP</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260815-0945" />
 </head>
 <body>
   <main class="app">
@@ -14,49 +14,34 @@
         <div class="eyebrow">ZERO-G MERGE PUZZLE</div>
         <h1>PLANET DROP</h1>
       </div>
-      <div class="scoreBox">
-        <span>SCORE</span>
-        <strong id="score">0</strong>
-      </div>
+      <div class="scoreBox"><span>SCORE</span><strong id="score">0</strong></div>
     </header>
-
     <section class="hud">
-      <div class="nextCard">
-        <span>NEXT</span>
-        <div id="nextPreview" class="preview"></div>
-      </div>
-      <div class="mission">
-        <span>MISSION</span>
-        <strong id="missionText">衛星をつくろう</strong>
-      </div>
+      <div class="nextCard"><span>NEXT</span><div id="nextPreview" class="preview"></div></div>
+      <div class="mission"><span>MISSION</span><strong id="missionText">ブラックホールを作って宇宙崩壊を遅らせろ！</strong></div>
       <button id="restartBtn" class="restart" type="button">↻</button>
     </section>
-
     <section class="gameWrap" aria-label="PLANET DROP game area">
       <canvas id="game" width="720" height="980"></canvas>
       <div id="message" class="message hidden">
         <div class="messageCard">
-          <div class="small">SPACE OVERFLOW</div>
+          <div class="small">SPACE COLLAPSE</div>
           <h2>GAME OVER</h2>
-          <p>天体が24個以上の状態が続き、宇宙空間が限界を超えました。</p>
+          <p>宇宙空間が限界を迎えました。</p>
           <p>最終スコア <strong id="finalScore">0</strong></p>
           <button id="againBtn" type="button">もう一度</button>
         </div>
       </div>
     </section>
-
     <div class="guide">
       <span>① 左右に照準を動かす</span>
-      <span>② 連打でLAUNCH STREAK</span>
-      <span>③ 同じ天体を合体するとSTREAK倍率で得点</span>
-      <span>④ 天体24個以上が約2秒続くとGAME OVER</span>
+      <span>② タップで天体を射出</span>
+      <span>③ 同じ天体を合体してブラックホールを作る</span>
+      <span>④ LIMIT越え、または背景ブラックホール臨界でGAME OVER</span>
+      <span>⑤ 背景ブラックホールは65秒で臨界。残り10秒から赤く点滅</span>
     </div>
-
-    <section class="evolution">
-      <div class="evoTitle">STAR EVOLUTION</div>
-      <div id="evoRow" class="evoRow"></div>
-    </section>
+    <section class="evolution"><div class="evoTitle">STAR EVOLUTION</div><div id="evoRow" class="evoRow"></div></section>
   </main>
-  <script src="game.js"></script>
+  <script src="game.js?v=20260815-0945"></script>
 </body>
 </html>
