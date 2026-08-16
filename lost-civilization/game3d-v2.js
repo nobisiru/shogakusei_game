@@ -8,7 +8,7 @@ const players=[
 ];
 let mode='com',turn=0,dice=0,busy=false,overview=false,seed=1;
 let map=[],heightMap=[],reachable=[],reachPaths=new Map(),drag=null;
-let terrainMeshes=[],colliders=[],resources=[],highlights=[],humans=[],dieGroup=null,riverMesh=null;
+let terrainMeshes=[],colliders=[],resources=[],highlights=[],borderLines=[],humans=[],dieGroup=null,riverMesh=null;
 
 const canvas=document.getElementById('game3d');
 const world=document.getElementById('world');
@@ -83,15 +83,15 @@ function place(t){for(let i=0;i<100;i++){const x=rand(1,N-2),y=rand(1,N-2);if(ma
 function ensureNear(sx,sy,t){for(let y=Math.max(1,sy-4);y<=Math.min(N-2,sy);y++)for(let x=Math.max(1,sx-4);x<=Math.min(N-2,sx+4);x++)if(map[y][x]===t)return;const x=Math.max(1,Math.min(N-2,sx+(rng()<.5?-2:2))),y=Math.max(1,sy-2);map[y][x]=t;heightMap[y][x]=1}
 
 function clearWorld(){
- for(const o of [...terrainMeshes,...colliders,...resources,...highlights,...humans])scene.remove(o);
+ for(const o of [...terrainMeshes,...colliders,...resources,...highlights,...borderLines,...humans])scene.remove(o);
  if(riverMesh)scene.remove(riverMesh);if(dieGroup)scene.remove(dieGroup);
- terrainMeshes=[];colliders=[];resources=[];highlights=[];humans=[];riverMesh=null;dieGroup=null;
+ terrainMeshes=[];colliders=[];resources=[];highlights=[];borderLines=[];humans=[];riverMesh=null;dieGroup=null;
 }
 
 function buildWorld(){
  clearWorld();
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
-  addTerrain(x,y);addCollider(x,y);addResource(x,y);addHighlight(x,y);
+  addTerrain(x,y);addCollider(x,y);addResource(x,y);addHighlight(x,y);addBorder(x,y);
  }
  addRiver();
  humans=[makeHuman(0),makeHuman(1)];scene.add(...humans);updateHumans();
@@ -113,6 +113,7 @@ function addTerrain(x,y){
 }
 function addCollider(x,y){const p=pos(x,y),g=new THREE.CylinderGeometry(.98,.98,.12,6);g.rotateY(Math.PI/6);const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({transparent:true,opacity:.002,depthWrite:false}));m.position.set(p.x,topY(x,y)+.09,p.z);m.userData={x,y};scene.add(m);colliders.push(m)}
 function addHighlight(x,y){const p=pos(x,y),r=new THREE.Mesh(new THREE.RingGeometry(.62,.84,28),new THREE.MeshBasicMaterial({color:0xffdf56,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));r.rotation.x=-Math.PI/2;r.position.set(p.x,topY(x,y)+.16,p.z);r.userData={x,y};scene.add(r);highlights.push(r)}
+function addBorder(x,y){const p=pos(x,y),r=.94,pts=[];for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3;pts.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r))}const geo=new THREE.BufferGeometry().setFromPoints(pts);const line=new THREE.LineLoop(geo,new THREE.LineBasicMaterial({color:0x203728,transparent:true,opacity:.34,depthWrite:false}));line.position.set(p.x,map[y][x]==='water'?.085:topY(x,y)+.19,p.z);line.userData={x,y};scene.add(line);borderLines.push(line)}
 function addResource(x,y){const t=map[y][x],p=pos(x,y),y0=topY(x,y)+.14;if(t==='tree'){const g=new THREE.Group();g.userData={x,y};const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,.62,7),new THREE.MeshStandardMaterial({color:0x65452f,roughness:1}));trunk.position.y=.31;const crown=new THREE.Mesh(new THREE.ConeGeometry(.48,1.0,8),new THREE.MeshStandardMaterial({color:0x2b6337,roughness:1}));crown.position.y=1.05;g.add(trunk,crown);g.position.set(p.x,y0,p.z);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);resources.push(g)}else if(t==='rock'){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.35,0),new THREE.MeshStandardMaterial({color:0x8b877d,roughness:1}));r.position.set(p.x,y0+.27,p.z);r.scale.set(1.2,.75,1);r.castShadow=true;r.userData={x,y};scene.add(r);resources.push(r)}else if(t==='goal'){const g=new THREE.Group();g.userData={x,y};const pole=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.15,8),new THREE.MeshStandardMaterial({color:0xf4d65c}));pole.position.y=.58;const star=new THREE.Mesh(new THREE.OctahedronGeometry(.22),new THREE.MeshStandardMaterial({color:0xffe56b,emissive:0x7b5d00,emissiveIntensity:.5}));star.position.y=1.25;g.add(pole,star);g.position.set(p.x,y0,p.z);scene.add(g);resources.push(g)}}
 function addRiver(){const pts=[];for(let y=0;y<N;y++){for(let x=0;x<N;x++)if(map[y][x]==='river'){const p=pos(x,y);pts.push(new THREE.Vector3(p.x,.10,p.z));break}}if(pts.length>2){const curve=new THREE.CatmullRomCurve3(pts),geo=new THREE.TubeGeometry(curve,64,.24,8,false);riverMesh=new THREE.Mesh(geo,MAT.river);scene.add(riverMesh)}}
 
@@ -120,7 +121,7 @@ function makeHuman(i){const g=new THREE.Group(),shirt=new THREE.MeshStandardMate
 function updateHumans(){players.forEach((p,i)=>{const v=pos(p.x,p.y);humans[i].position.set(v.x,topY(p.x,p.y)+.18,v.z)})}
 
 function reveal(p){for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(hdist(p.x,p.y,x,y)<=5)p.seen.add(key(x,y))}
-function updateFog(){const v=players[turn];for(const m of terrainMeshes){const {x,y,type}=m.userData,seen=v.seen.has(key(x,y)),near=hdist(v.x,v.y,x,y)<=5;m.visible=seen;if(m.material){m.material.transparent=!near||type==='water';m.material.opacity=near?(type==='water'?.88:1):(type==='water'?.38:.44);m.material.depthWrite=near&&type!=='water'}}for(const r of resources){const d=r.userData;if(d&&Number.isFinite(d.x))r.visible=v.seen.has(key(d.x,d.y))}for(const c of colliders)c.visible=v.seen.has(key(c.userData.x,c.userData.y))}
+function updateFog(){const v=players[turn];for(const m of terrainMeshes){const {x,y,type}=m.userData,seen=v.seen.has(key(x,y)),near=hdist(v.x,v.y,x,y)<=5;m.visible=seen;if(m.material){m.material.transparent=!near||type==='water';m.material.opacity=near?(type==='water'?.88:1):(type==='water'?.38:.44);m.material.depthWrite=near&&type!=='water'}}for(const r of resources){const d=r.userData;if(d&&Number.isFinite(d.x))r.visible=v.seen.has(key(d.x,d.y))}for(const c of colliders)c.visible=v.seen.has(key(c.userData.x,c.userData.y));for(const b of borderLines){const seen=v.seen.has(key(b.userData.x,b.userData.y)),near=hdist(v.x,v.y,b.userData.x,b.userData.y)<=5;b.visible=seen;b.material.opacity=near?.34:.18}}
 
 function bindUI(){
  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>startGame(b.dataset.mode));
@@ -141,8 +142,10 @@ function canEnter(p,x,y,from){if(!inside(x,y))return false;const t=map[y][x],ft=
 function getReachable(p,steps){const q=[{x:p.x,y:p.y,d:0,path:[]}],best=new Map([[key(p.x,p.y),0]]),out=[];reachPaths.clear();while(q.length){const cur=q.shift();if(cur.d===steps){if(cur.x!==p.x||cur.y!==p.y){out.push(cur);reachPaths.set(key(cur.x,cur.y),cur.path)}continue}for(const[dx,dy]of DIRS){const x=cur.x+dx,y=cur.y+dy,k=key(x,y);if(!canEnter(p,x,y,cur))continue;const nd=cur.d+1;if(best.has(k)&&best.get(k)<=nd)continue;best.set(k,nd);q.push({x,y,d:nd,path:[...cur.path,{x,y}]})}}return out}
 
 async function roll(){if(busy||dice||(mode==='com'&&turn===1))return;busy=true;const n=rand(1,6);await animateDie(n);dice=n;reachable=getReachable(players[turn],n);showHighlights();busy=false;if(!reachable.length)setTimeout(endTurn,450)}
-function makeDie(){if(dieGroup)scene.remove(dieGroup);dieGroup=new THREE.Group();const cube=new THREE.Mesh(new THREE.BoxGeometry(.82,.82,.82),new THREE.MeshStandardMaterial({color:0xfff5d8,roughness:.42}));cube.castShadow=true;dieGroup.add(cube);scene.add(dieGroup);return cube}
-function animateDie(n){return new Promise(resolve=>{const cube=makeDie(),p=players[turn],v=pos(p.x,p.y),base=topY(p.x,p.y),t0=performance.now(),dur=920;dieGroup.position.set(v.x-1,base+2.2,v.z+.6);function step(now){const t=Math.min(1,(now-t0)/dur),hop=Math.abs(Math.sin(t*Math.PI*4))*(1-t)*1.65;dieGroup.position.set(v.x-1+t*3.2,base+.48+hop,v.z+.6+t*1.3);cube.rotation.x+=.24;cube.rotation.y+=.31;cube.rotation.z+=.19;if(t<1)requestAnimationFrame(step);else{setTimeout(()=>{scene.remove(dieGroup);dieGroup=null;resolve()},180)}}requestAnimationFrame(step)})}
+function diceFaceTexture(n){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#fff8e7';g.fillRect(0,0,128,128);g.strokeStyle='#d8c9a8';g.lineWidth=5;g.strokeRect(2.5,2.5,123,123);g.fillStyle='#26231f';const pts={1:[[64,64]],2:[[38,38],[90,90]],3:[[38,38],[64,64],[90,90]],4:[[38,38],[90,38],[38,90],[90,90]],5:[[38,38],[90,38],[64,64],[38,90],[90,90]],6:[[38,34],[38,64],[38,94],[90,34],[90,64],[90,94]]}[n];for(const [x,y] of pts){g.beginPath();g.arc(x,y,10,0,Math.PI*2);g.fill()}const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return tex}
+function makeDie(){if(dieGroup)scene.remove(dieGroup);dieGroup=new THREE.Group();const faceNums=[3,4,1,6,2,5],mats=faceNums.map(n=>new THREE.MeshStandardMaterial({map:diceFaceTexture(n),roughness:.38,metalness:0}));const cube=new THREE.Mesh(new THREE.BoxGeometry(.84,.84,.84),mats);cube.castShadow=true;cube.receiveShadow=true;const edge=new THREE.LineSegments(new THREE.EdgesGeometry(cube.geometry),new THREE.LineBasicMaterial({color:0x9f9277,transparent:true,opacity:.65}));cube.add(edge);dieGroup.add(cube);scene.add(dieGroup);return cube}
+function orientDie(cube,n){cube.rotation.set(0,0,0);if(n===6)cube.rotation.x=Math.PI;else if(n===2)cube.rotation.x=-Math.PI/2;else if(n===5)cube.rotation.x=Math.PI/2;else if(n===3)cube.rotation.z=Math.PI/2;else if(n===4)cube.rotation.z=-Math.PI/2}
+function animateDie(n){return new Promise(resolve=>{const cube=makeDie(),p=players[turn],v=pos(p.x,p.y),base=topY(p.x,p.y),t0=performance.now(),dur=1050;dieGroup.position.set(v.x-1.1,base+2.3,v.z+.5);function step(now){const t=Math.min(1,(now-t0)/dur),hop=Math.abs(Math.sin(t*Math.PI*4.4))*(1-t)*1.8;dieGroup.position.set(v.x-1.1+t*3.5,base+.5+hop,v.z+.5+t*1.45);cube.rotation.x+=.28;cube.rotation.y+=.34;cube.rotation.z+=.23;if(t<1)requestAnimationFrame(step);else{orientDie(cube,n);dieGroup.position.y=base+.48;setTimeout(()=>{scene.remove(dieGroup);dieGroup=null;resolve()},420)}}requestAnimationFrame(step)})}
 function showHighlights(){const set=new Set(reachable.map(r=>key(r.x,r.y)));for(const h of highlights){h.material.opacity=set.has(key(h.userData.x,h.userData.y))?.82:0}if(reachable.length){const pts=reachable.map(r=>pos(r.x,r.y)),c=pts.reduce((a,b)=>a.add(b.clone()),new THREE.Vector3()).multiplyScalar(1/pts.length);lookGoal.set(c.x,1,c.z);cameraGoal.set(c.x+15,12,c.z+18)}}
 async function moveTo(x,y){if(busy||!reachable.some(r=>r.x===x&&r.y===y))return;busy=true;const who=turn,p=players[who],path=reachPaths.get(key(x,y))||[{x,y}];reachable=[];showHighlights();for(const s of path){p.x=s.x;p.y=s.y;reveal(p);await walkStep(who,s.x,s.y);updateFog()}collect(p,x,y);autoCraft(p);updateHud();busy=false;if(map[y][x]==='goal'){win();return}setTimeout(endTurn,450)}
 function walkStep(i,x,y){return new Promise(resolve=>{const g=humans[i],from=g.position.clone(),v=pos(x,y),to=new THREE.Vector3(v.x,topY(x,y)+.18,v.z),t0=performance.now();function step(now){const t=Math.min(1,(now-t0)/280),e=t*t*(3-2*t);g.position.lerpVectors(from,to,e);g.userData.leg1.rotation.x=Math.sin(t*Math.PI*4)*.6;g.userData.leg2.rotation.x=-Math.sin(t*Math.PI*4)*.6;if(t<1)requestAnimationFrame(step);else{g.userData.leg1.rotation.x=g.userData.leg2.rotation.x=0;focusPlayer(i);resolve()}}requestAnimationFrame(step)})}
@@ -157,7 +160,7 @@ function win(){document.getElementById('winnerText').textContent=`${players[turn
 let toastTimer;function toast(s){const e=document.getElementById('toast');e.textContent=s;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),1100)}
 
 function pointerDown(e){if(busy)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY,moved:false};canvas.setPointerCapture?.(e.pointerId)}
-function pointerMove(e){if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.px,dy=e.clientY-drag.py;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>8)drag.moved=true;drag.px=e.clientX;drag.py=e.clientY;if(drag.moved){cameraGoal.x-=dx*.018*camDistance;cameraGoal.z-=dy*.022*camDistance;lookGoal.x-=dx*.018*camDistance;lookGoal.z-=dy*.022*camDistance}}
+function pointerMove(e){if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.px,dy=e.clientY-drag.py;if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>15)drag.moved=true;drag.px=e.clientX;drag.py=e.clientY;if(drag.moved){cameraGoal.x-=dx*.0065*camDistance;cameraGoal.z-=dy*.008*camDistance;lookGoal.x-=dx*.0065*camDistance;lookGoal.z-=dy*.008*camDistance}}
 function pointerUp(e){if(!drag||drag.id!==e.pointerId)return;const moved=drag.moved;drag=null;if(!moved&&!busy&&reachable.length){const r=canvas.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(colliders,false);for(const hit of hits){const{x,y}=hit.object.userData;if(reachable.some(q=>q.x===x&&q.y===y)){moveTo(x,y);break}}}}
 
 function renderLoop(){function loop(){requestAnimationFrame(loop);const dt=Math.min(.033,clock.getDelta());camera.position.lerp(cameraGoal,1-Math.pow(.001,dt));lookNow.lerp(lookGoal,1-Math.pow(.001,dt));camera.lookAt(lookNow);const t=performance.now()*.001;if(riverMesh)riverMesh.material.roughness=.17+.03*Math.sin(t*1.7);renderer.render(scene,camera)}loop()}
