@@ -1,7 +1,7 @@
 (()=>{
 const state=[mk(),mk()];
-let lastTurn='',lastPhase='朝',day=1,huntBusy=false,lastMission='';
-function mk(){return{food:6,cap:6,spear:false,firstHunt:false,hungry:false,starveDays:0,lastHuntDay:0}}
+let lastTurn='',lastPhase='朝',day=1,huntBusy=false;
+function mk(){return{food:6,cap:6,spear:false,firstHunt:false,hungry:false,starveDays:0,lastHuntDay:0,fireClearShown:false,boatClearShown:false}}
 
 const css=document.createElement('style');
 css.textContent=`
@@ -26,11 +26,24 @@ function storeCounts(i){let t=invText(i),wood=Number((t.match(/🏕️🪵(\d+)/
 function bagCounts(i){if(i!==currentIndex())return{wood:0,stone:0};let t=document.getElementById('bagHud')?.textContent||'',wood=Number((t.match(/🪵(\d+)/)||[])[1]||0),stone=Number((t.match(/🪨(\d+)/)||[])[1]||0);return{wood,stone}}
 function totalCounts(i){let a=storeCounts(i),b=bagCounts(i);return{wood:a.wood+b.wood,stone:a.stone+b.stone,store:a,bag:b}}
 function coreMission(){return document.getElementById('missionNow')?.textContent||''}
-function hasFire(i){let m=coreMission();return !m.includes('火を起こせ')}
+function hasFire(i){let s=state[i];if(s.fireClearShown)return true;let m=coreMission();return i===currentIndex()&&!m.includes('火を起こせ')}
 function canInventSpear(i){let r=totalCounts(i);return hasFire(i)&&r.wood>=1&&r.stone>=1}
 
+// 画面のMISSION文言変化ではなく、ゲーム本体が出す状態を見て一度だけ達成イベント化する。
+function detectCoreAchievements(){
+ const i=currentIndex(),s=state[i],m=coreMission(),inv=invText(i);
+ if(!s.fireClearShown&&(m.includes('水辺に拠点')||m.includes('舟をつくれ')||m.includes('川と海を越えろ'))){
+   s.fireClearShown=true;
+   showMissionClear('木2・石1');
+ }
+ if(!s.boatClearShown&&inv.includes('🛶')){
+   s.boatClearShown=true;
+   showMissionClear('木4');
+ }
+}
+
 function inventSpear(){let i=currentIndex(),s=state[i];if(s.spear||!canInventSpear(i))return;s.spear=true;showMissionClear('木1・石1');toast('🗡️ 石の槍を発明！ これで動物を狩れる');render()}
-function hunt(){let i=currentIndex(),s=state[i];if(!s.spear||huntBusy||s.lastHuntDay===day)return;huntBusy=true;action.disabled=true;action.textContent='🐗 狩り中…';setTimeout(()=>{let gain=4;s.food=Math.min(s.cap,s.food+gain);s.firstHunt=true;s.lastHuntDay=day;s.hungry=false;s.starveDays=0;showMissionClear('石の槍');toast(`🐗 狩り成功！ 🍖 食料 +${gain}`);huntBusy=false;render()},650)}
+function hunt(){let i=currentIndex(),s=state[i];if(!s.spear||huntBusy||s.lastHuntDay===day)return;huntBusy=true;action.disabled=true;action.textContent='🐗 狩り中…';setTimeout(()=>{let gain=4;s.food=Math.min(s.cap,s.food+gain);if(!s.firstHunt){s.firstHunt=true;showMissionClear('石の槍')}s.lastHuntDay=day;s.hungry=false;s.starveDays=0;toast(`🐗 狩り成功！ 🍖 食料 +${gain}`);huntBusy=false;render()},650)}
 action.onclick=()=>{let s=state[currentIndex()];if(!s.spear)inventSpear();else hunt()};
 
 function consumeDay(){day++;for(const s of state){if(s.food>0){s.food=Math.max(0,s.food-1);s.hungry=s.food===0;if(!s.hungry)s.starveDays=0}else{s.hungry=true;s.starveDays++}}toast('🌙 1日終了　🍖 食料 -1');render()}
@@ -46,14 +59,12 @@ function render(){let i=currentIndex(),s=state[i],r=totalCounts(i);hud.innerHTML
  const core=invText(i);if(!core.includes('🌊'))setMission('🏕️ 水辺に拠点を作れ','川・海のとなりの陸地へ行こう');else if(!core.includes('🛶'))setMission('🛶 舟をつくれ','基地保管：木4');else setMission('⭐ 川と海を越えろ','水上では舟に変わる');
 }
 
-function watchCoreMission(){let now=coreMission();if(!now||now===lastMission){lastMission=now;return}if(lastMission.includes('火を起こせ')&&!now.includes('火を起こせ'))showMissionClear('木2・石1');else if(lastMission.includes('舟をつくれ')&&!now.includes('舟をつくれ'))showMissionClear('木4');lastMission=now}
-const turn=document.getElementById('turnText'),time=document.getElementById('timeBadge'),mission=document.getElementById('missionNow');
-new MutationObserver(()=>{let t=turn.textContent;if(t!==lastTurn){lastTurn=t;setTimeout(render,80)}}).observe(turn,{childList:true,subtree:true,characterData:true});
+const turn=document.getElementById('turnText'),time=document.getElementById('timeBadge');
+new MutationObserver(()=>{let t=turn.textContent;if(t!==lastTurn){lastTurn=t;setTimeout(()=>{detectCoreAchievements();render()},40)}}).observe(turn,{childList:true,subtree:true,characterData:true});
 new MutationObserver(()=>{let p=time.textContent;if(lastPhase.includes('晩')&&p.includes('朝'))consumeDay();lastPhase=p;render()}).observe(time,{childList:true,subtree:true,characterData:true});
-new MutationObserver(()=>setTimeout(watchCoreMission,20)).observe(mission,{childList:true,subtree:true,characterData:true});
-const invObserver=new MutationObserver(()=>setTimeout(render,30));invObserver.observe(document.getElementById('p1Inv'),{childList:true,subtree:true,characterData:true});invObserver.observe(document.getElementById('p2Inv'),{childList:true,subtree:true,characterData:true});invObserver.observe(document.getElementById('bagHud'),{childList:true,subtree:true,characterData:true});
+const invObserver=new MutationObserver(()=>setTimeout(()=>{detectCoreAchievements();render()},10));invObserver.observe(document.getElementById('p1Inv'),{childList:true,subtree:true,characterData:true});invObserver.observe(document.getElementById('p2Inv'),{childList:true,subtree:true,characterData:true});invObserver.observe(document.getElementById('bagHud'),{childList:true,subtree:true,characterData:true});
 
-document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setTimeout(()=>{state[0]=mk();state[1]=mk();day=1;lastPhase='朝';lastMission='';render();watchCoreMission()},250)));
-document.getElementById('reset')?.addEventListener('click',()=>setTimeout(()=>{state[0]=mk();state[1]=mk();day=1;lastPhase='朝';lastMission='';render();watchCoreMission()},200));
-render();watchCoreMission();
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setTimeout(()=>{state[0]=mk();state[1]=mk();day=1;lastPhase='朝';detectCoreAchievements();render()},250)));
+document.getElementById('reset')?.addEventListener('click',()=>setTimeout(()=>{state[0]=mk();state[1]=mk();day=1;lastPhase='朝';detectCoreAchievements();render()},200));
+render();
 })();
